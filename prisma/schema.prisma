@@ -1,0 +1,445 @@
+generator client {
+  provider = "prisma-client-js"
+}
+datasource db {
+  provider = "postgresql"
+  url = env("DATABASE_URL")
+}
+enum ProductType {
+  E_CNPJ
+  E_CPF
+  E_PF
+  E_PJ
+}
+enum CertificateType {
+  A1
+  A3
+}
+enum A3Model {
+  TOKEN
+  NUVEM
+  CARTAO
+}
+enum ClientStatus {
+  ATIVO
+  PROXIMO_VENCIMENTO
+  VENCIDO
+  RENOVADO
+}
+enum ContactType {
+  EMAIL
+  WHATSAPP
+}
+enum ContactStatus {
+  PENDING
+  SENT
+  FAILED
+}
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  OPERADOR
+}
+enum RenewalStage {
+  PENDENTE
+  CONTATADO
+  NEGOCIACAO
+  RENOVADO
+  RECUSADO
+}
+enum AccessRequestStatus {
+  PENDENTE
+  APROVADO
+  RECUSADO
+}
+enum CnpjAlertStatus {
+  NOVO
+  EM_ANALISE
+  APROVADO_CONTATO
+  CONTATADO
+  DESCARTADO
+}
+enum ReconciliationStatus {
+  CONFERIDO
+  DIVERGENTE
+  SOMENTE_PAINEL
+  SOMENTE_CERTISIGN
+  REVISAO_MANUAL
+  IGNORADO
+}
+enum ComparisonStatus {
+  CONFERE
+  DIFERENTE
+  NAO_DISPONIVEL
+}
+enum ReconciliationReviewStatus {
+  PENDENTE
+  REVISADO
+  IGNORADO
+}
+enum ReconciliationKind {
+  PEDIDOS
+  PARCEIROS
+}
+enum EmissionDateImportRunStatus {
+  PREVIA
+  APLICANDO
+  CONCLUIDO
+  FALHOU
+}
+enum EmissionDateImportItemStatus {
+  ATUALIZAR
+  SEM_ALTERACAO
+  PEDIDO_NAO_ENCONTRADO
+  PEDIDO_AMBIGUO
+  PEDIDO_REPETIDO
+  DATA_INVALIDA
+  PEDIDO_RENOVADO
+  VENCIMENTO_DIVERGENTE
+  CONFLITO
+  ATUALIZADO
+}
+model User {
+  id String @id @default(cuid())
+  name String
+  email String @unique
+  passwordHash String
+  role UserRole @default(OPERADOR)
+  imageUrl String?
+  active Boolean @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  contactLogs ContactLog[]
+  cnpjAlertActivities CnpjAlertActivity[]
+  cnpjAlertContactLogs CnpjAlertContactLog[]
+  reconciliationRuns ReconciliationRun[] @relation("ReconciliationImportedBy")
+  reconciliationReviews ReconciliationItem[] @relation("ReconciliationReviewedBy")
+  certisignPartnerMappings CertisignPartnerMapping[] @relation("CertisignPartnerMappingCreatedBy")
+  commissionAppliedReconciliationItems ReconciliationItem[] @relation("ReconciliationCommissionAppliedBy")
+  emissionDateImportRuns EmissionDateImportRun[] @relation("EmissionDateImportRunCreatedBy")
+}
+model Client {
+  id String @id @default(cuid())
+  orderNumber String @unique
+  name String?
+  validationPost String?
+  productType ProductType
+  cpf String
+  cnpj String?
+  certificateType CertificateType
+  a3Model A3Model?
+  productDescription String?
+  personType String?
+  orderStatus String?
+  validationType String?
+  legalName String?
+  renewalCode String?
+  renewal30Days Boolean?
+  renewal60Days Boolean?
+  renewal90Days Boolean?
+  isRenewal Boolean?
+  issuedAt DateTime?
+  purchaseDate DateTime?
+  expirationDate DateTime
+  email String
+  phone String?
+  status ClientStatus @default(ATIVO)
+  renewalStage RenewalStage @default(PENDENTE)
+  estimatedValue Decimal? @db.Decimal(12, 2)
+  priceRuleId String?
+  partnerId String?
+  notes String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  contactLogs ContactLog[]
+  partner Partner? @relation(fields: [partnerId], references: [id])
+  priceRule PriceRule? @relation(fields: [priceRuleId], references: [id])
+  reconciliationItems ReconciliationItem[]
+  emissionDateImportItems EmissionDateImportItem[]
+  @@index([cpf])
+  @@index([cnpj])
+  @@index([email])
+  @@index([phone])
+  @@index([expirationDate])
+  @@index([status])
+  @@index([productType])
+  @@index([certificateType])
+  @@index([issuedAt])
+  @@index([cpf, expirationDate])
+  @@index([partnerId])
+  @@index([priceRuleId])
+}
+model ContactLog {
+  id String @id @default(cuid())
+  clientId String
+  userId String
+  type ContactType
+  recipient String
+  message String
+  status ContactStatus @default(PENDING)
+  providerResponse String?
+  createdAt DateTime @default(now())
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id])
+  @@index([clientId])
+  @@index([createdAt])
+}
+model AppSettings {
+  id String @id @default("default")
+  emailApiUrl String?
+  emailApiKey String?
+  emailSender String?
+  emailSenderName String?
+  whatsappApiUrl String?
+  whatsappApiToken String?
+  whatsappSender String?
+  emailSubject String?
+  emailTemplate String?
+  whatsappTemplate String?
+  brandName String? @default("Painel de Renovações")
+  primaryColor String? @default("#0f766e")
+  secondaryColor String? @default("#ffffff")
+  sidebarColor String? @default("#0f172a")
+  logoUrl String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+model AccessRequest {
+  id String @id @default(cuid())
+  name String
+  email String @unique
+  passwordHash String
+  requestedRole UserRole @default(ADMIN)
+  status AccessRequestStatus @default(PENDENTE)
+  reviewedAt DateTime?
+  reviewedById String?
+  createdAt DateTime @default(now())
+  @@index([status])
+}
+model Partner {
+  id String @id @default(cuid())
+  officeName String
+  email String @unique
+  revCode String @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  clients Client[]
+  certisignPartnerMappings CertisignPartnerMapping[]
+  commissionAppliedReconciliationItems ReconciliationItem[] @relation("ReconciliationCommissionAppliedPartner")
+  @@index([officeName])
+}
+model PriceRule {
+  id String @id @default(cuid())
+  productType ProductType
+  certificateType CertificateType
+  a3Model A3Model?
+  amount Decimal @db.Decimal(12, 2)
+  effectiveFrom DateTime
+  effectiveTo DateTime?
+  active Boolean @default(true)
+  createdAt DateTime @default(now())
+  clients Client[]
+  @@index([productType, certificateType, a3Model, effectiveFrom])
+}
+model FinancialClose {
+  id String @id @default(cuid())
+  month DateTime @unique
+  saleCount Int
+  totalRevenue Decimal @db.Decimal(14, 2)
+  totalCommission Decimal @db.Decimal(14, 2)
+  closedAt DateTime @default(now())
+  closedById String
+}
+model AuditLog {
+  id String @id @default(cuid())
+  actorUserId String?
+  action String
+  entity String
+  entityId String?
+  details Json?
+  createdAt DateTime @default(now())
+  @@index([entity, entityId])
+  @@index([createdAt])
+}
+model CnpjAlert {
+  id String @id @default(cuid())
+  cnpj String @unique
+  legalName String
+  tradeName String?
+  openingDate DateTime?
+  registrationStatus String?
+  cnae String?
+  city String
+  state String
+  email String?
+  phone String?
+  source String
+  receivedAt DateTime @default(now())
+  status CnpjAlertStatus @default(NOVO)
+  doNotContact Boolean @default(false)
+  contactSentAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  activities CnpjAlertActivity[]
+  contactLogs CnpjAlertContactLog[]
+  @@index([status])
+  @@index([openingDate])
+  @@index([city, state])
+  @@index([receivedAt])
+}
+model CnpjAlertActivity {
+  id String @id @default(cuid())
+  alertId String
+  actorUserId String?
+  action String
+  details Json?
+  createdAt DateTime @default(now())
+  alert CnpjAlert @relation(fields: [alertId], references: [id], onDelete: Cascade)
+  actorUser User? @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+  @@index([alertId, createdAt])
+}
+model CnpjAlertContactLog {
+  id String @id @default(cuid())
+  alertId String
+  userId String
+  recipient String
+  subject String
+  message String
+  status ContactStatus @default(PENDING)
+  providerResponse String?
+  createdAt DateTime @default(now())
+  alert CnpjAlert @relation(fields: [alertId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id])
+  @@index([alertId, createdAt])
+  @@index([createdAt])
+}
+model EmissionDateImportRun {
+  id String @id @default(cuid())
+  fileName String
+  fileHash String
+  importedById String
+  status EmissionDateImportRunStatus @default(PREVIA)
+  totalRows Int
+  updateCount Int @default(0)
+  appliedCount Int @default(0)
+  skippedCount Int @default(0)
+  createdAt DateTime @default(now())
+  appliedAt DateTime?
+  importedBy User @relation("EmissionDateImportRunCreatedBy", fields: [importedById], references: [id], onDelete: Restrict)
+  items EmissionDateImportItem[]
+  @@index([importedById, status, createdAt])
+  @@index([fileHash])
+}
+model EmissionDateImportItem {
+  id String @id @default(cuid())
+  runId String
+  sourceLine Int
+  sourceOrderNumber String
+  matchedOrderNumber String?
+  clientId String?
+  sourceIssuedAt DateTime?
+  sourceExpirationDate DateTime?
+  previousIssuedAt DateTime?
+  previousExpirationDate DateTime?
+  calculatedExpirationDate DateTime?
+  status EmissionDateImportItemStatus
+  message String?
+  appliedAt DateTime?
+  run EmissionDateImportRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+  client Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  @@unique([runId, sourceLine])
+  @@index([clientId])
+  @@index([runId, status])
+}
+model ReconciliationRun {
+  id String @id @default(cuid())
+  competence DateTime
+  kind ReconciliationKind @default(PEDIDOS)
+  source String @default("Certisign")
+  fileName String
+  sheetName String?
+  fileHash String
+  importedAt DateTime @default(now())
+  importedById String?
+  totalSourceRows Int
+  validSourceRows Int
+  invalidSourceRows Int @default(0)
+  ignoredSourceRows Int @default(0)
+  totalItems Int
+  createdAt DateTime @default(now())
+  importedBy User? @relation("ReconciliationImportedBy", fields: [importedById], references: [id], onDelete: SetNull)
+  items ReconciliationItem[]
+  @@unique([competence, kind, fileHash])
+  @@index([kind, competence, importedAt])
+  @@index([importedAt])
+}
+model ReconciliationItem {
+  id String @id @default(cuid())
+  runId String
+  sourceLine Int?
+  clientId String?
+  externalOrderNumber String?
+  externalEntityCode String?
+  externalEntityName String?
+  externalVendorCode String?
+  externalVendorName String?
+  externalProductCode String?
+  externalProductName String?
+  externalOrderStatus String?
+  externalOrderDate DateTime?
+  externalRenewalDate DateTime?
+  externalPreviousOrder String?
+  externalClientName String?
+  externalVoucherType String?
+  externalGrossAmount Decimal? @db.Decimal(12, 2)
+  externalBillingAmount Decimal? @db.Decimal(12, 2)
+  externalCommissionAmount Decimal? @db.Decimal(12, 2)
+  externalCount Int?
+  rawData Json?
+  systemOrderNumber String?
+  systemClientName String?
+  systemCpf String?
+  systemCnpj String?
+  systemValue Decimal? @db.Decimal(12, 2)
+  systemProductType ProductType?
+  systemCertificateType CertificateType?
+  systemA3Model A3Model?
+  systemPartnerRevCode String?
+  systemPartnerName String?
+  status ReconciliationStatus
+  valueStatus ComparisonStatus @default(NAO_DISPONIVEL)
+  productStatus ComparisonStatus @default(NAO_DISPONIVEL)
+  partnerStatus ComparisonStatus @default(NAO_DISPONIVEL)
+  differences Json?
+  reviewStatus ReconciliationReviewStatus @default(PENDENTE)
+  reviewNote String?
+  reviewedAt DateTime?
+  reviewedById String?
+  commissionAppliedAt DateTime?
+  commissionAppliedById String?
+  commissionAppliedPartnerId String?
+  createdAt DateTime @default(now())
+  run ReconciliationRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+  client Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  reviewedBy User? @relation("ReconciliationReviewedBy", fields: [reviewedById], references: [id], onDelete: SetNull)
+  commissionAppliedBy User? @relation("ReconciliationCommissionAppliedBy", fields: [commissionAppliedById], references: [id], onDelete: SetNull)
+  commissionAppliedPartner Partner? @relation("ReconciliationCommissionAppliedPartner", fields: [commissionAppliedPartnerId], references: [id], onDelete: SetNull)
+  @@unique([runId, sourceLine])
+  @@index([runId, status])
+  @@index([runId, reviewStatus])
+  @@index([externalOrderNumber])
+  @@index([clientId])
+  @@index([commissionAppliedPartnerId])
+}
+model CertisignPartnerMapping {
+  id String @id @default(cuid())
+  externalVendorCode String @unique
+  externalVendorName String?
+  partnerId String
+  createdById String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  partner Partner @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  createdBy User? @relation("CertisignPartnerMappingCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  @@index([partnerId])
+}

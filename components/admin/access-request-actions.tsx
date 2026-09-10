@@ -1,0 +1,4 @@
+"use client";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+export function AccessRequestActions({id}:{id:string}){const [loading,setLoading]=useState(false);const router=useRouter();async function action(value:"approve"|"reject"){setLoading(true);const response=await fetch(`/api/access-requests/${id}`,{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:value})});setLoading(false);if(response.ok)router.refresh();else alert((await response.json()).error?.message||"Não foi possível concluir a ação.");}return <div className="flex gap-2"><button disabled={loading} onClick={()=>action("approve")} className="brand-bg text-white rounded px-3 py-1 text-xs disabled:opacity-50">Aprovar</button><button disabled={loading} onClick={()=>action("reject")} className="border border-red-300 text-red-700 rounded px-3 py-1 text-xs disabled:opacity-50">Recusar</button></div>}

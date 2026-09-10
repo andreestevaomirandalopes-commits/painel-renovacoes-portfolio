@@ -1,0 +1,3 @@
+import { ClientStatus } from "@prisma/client";
+export function calculateCertificateStatus(expirationDate: Date, now = new Date()): ClientStatus { const d = new Date(expirationDate); d.setHours(23,59,59,999); const today = new Date(now); today.setHours(0,0,0,0); if (d < today) return ClientStatus.VENCIDO; const days = Math.ceil((d.getTime()-today.getTime())/86400000); return days <= 7 ? ClientStatus.PROXIMO_VENCIMENTO : ClientStatus.ATIVO; }
+export function daysLabel(date: Date) { const days = Math.ceil((new Date(date).setHours(0,0,0,0)-new Date().setHours(0,0,0,0))/86400000); if(days < 0) return `Vencido há ${Math.abs(days)} dia(s)`; if(days===0)return "Vence hoje"; if(days===1)return "Vence amanhã"; return `Vence em ${days} dias`; }

@@ -1,0 +1,5 @@
+import { prisma } from "@/lib/prisma";
+import bcrypt from "bcryptjs";
+import { z } from "zod";
+const schema=z.object({name:z.string().min(2),email:z.string().email(),password:z.string().min(8)});
+export async function POST(request:Request){const parsed=schema.safeParse(await request.json());if(!parsed.success)return Response.json({error:{message:"Informe nome, e-mail válido e senha de ao menos 8 caracteres."}},{status:400});const {name,email,password}=parsed.data;const exists=await prisma.user.findUnique({where:{email}});if(exists)return Response.json({error:{message:"Este e-mail já possui acesso ao painel."}},{status:409});try{await prisma.accessRequest.upsert({where:{email},create:{name,email,passwordHash:await bcrypt.hash(password,12)},update:{name,passwordHash:await bcrypt.hash(password,12),status:"PENDENTE",reviewedAt:null,reviewedById:null}});return Response.json({success:true,data:{message:"Solicitação enviada. Aguarde a aprovação de um administrador."}})}catch{return Response.json({error:{message:"Não foi possível enviar a solicitação."}},{status:500})}}

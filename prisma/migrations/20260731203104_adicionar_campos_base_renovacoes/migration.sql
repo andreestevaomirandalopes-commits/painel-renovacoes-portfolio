@@ -1,0 +1,15 @@
+-- AlterTable
+ALTER TABLE "Client" ADD COLUMN     "isRenewal" BOOLEAN,
+ADD COLUMN     "legalName" TEXT,
+ADD COLUMN     "name" TEXT,
+ADD COLUMN     "orderStatus" TEXT,
+ADD COLUMN     "personType" TEXT,
+ADD COLUMN     "productDescription" TEXT,
+ADD COLUMN     "renewal30Days" BOOLEAN,
+ADD COLUMN     "renewal60Days" BOOLEAN,
+ADD COLUMN     "renewal90Days" BOOLEAN,
+ADD COLUMN     "renewalCode" TEXT,
+ADD COLUMN     "validationPost" TEXT,
+ADD COLUMN     "validationType" TEXT,
+ALTER COLUMN "purchaseDate" DROP NOT NULL,
+ALTER COLUMN "phone" DROP NOT NULL;
