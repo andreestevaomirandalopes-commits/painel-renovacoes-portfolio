@@ -1,53 +1,89 @@
-# Painel de Gestão de Renovações
+<h1 align="center">Painel de Renovações</h1>
 
-Projeto demonstrativo de um painel para gestão de certificados digitais, renovações, parceiros, conciliação financeira e alertas de novos CNPJs.
+<p align="center">
+  Sistema demonstrativo para gestão de clientes, renovações e processos internos.
+</p>
 
-> Esta versão existe exclusivamente para portfólio. Não contém banco de dados, credenciais, arquivos enviados, logotipos de clientes, contatos reais ou rotinas de envio ativas.
+<p align="center">
+  <img src="https://img.shields.io/badge/status-em%20desenvolvimento-1A3F75?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/stack-Next.js%20%7C%20React%20%7C%20TypeScript-0A0F1F?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/database-PostgreSQL-2F5D8C?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/license-demo-lightgrey?style=for-the-badge" />
+</p>
 
-## Recursos demonstrados
+---
 
-- Cadastro e acompanhamento de clientes e certificados A1/A3;
-- Cálculo de vencimento a partir da data de emissão;
-- Busca, filtros de 30/60/90 dias e vencimentos do dia;
-- Importação de planilhas de clientes, parceiros, conciliação e datas de emissão;
-- Parceiros, códigos REV e cálculo de comissões;
-- Dashboard e visão financeira;
-- Caixinha para registrar despesas em dinheiro, com saldo e histórico;
-- Alertas de CNPJ com importação manual;
-- Controle de acessos para Proprietário, Administrador e Operador;
-- Perfil e personalização visual.
+## 📌 Sobre o projeto
 
-## Tecnologias
+O **Painel de Renovações** foi desenvolvido com o objetivo de **centralizar informações de clientes**, facilitar o **acompanhamento de renovações** e apoiar a **organização de processos internos** em um único ambiente.
 
-Next.js, React, TypeScript, Tailwind CSS, PostgreSQL, Prisma ORM, Auth.js/NextAuth, Zod, React Hook Form, SheetJS/XLSX e Vitest.
+Este repositório apresenta uma **versão pública e demonstrativa** do sistema, voltada para portfólio, utilizando apenas **dados fictícios** e sem expor informações sensíveis.
 
-## Executar localmente
+---
 
-1. Instale Node.js LTS e pnpm.
-2. Copie `.env.example` para `.env`.
-3. Crie um banco PostgreSQL vazio e ajuste `DATABASE_URL`.
-4. Execute:
+## 🚨 Problema
 
-```bash
-pnpm install
-pnpm exec prisma migrate deploy
-pnpm demo:seed
-pnpm dev
-```
+Em muitos cenários, o acompanhamento de clientes, renovações e processos operacionais fica distribuído entre planilhas, anotações e controles manuais.
 
-5. Abra `http://localhost:3000` e entre com:
+Isso pode gerar:
 
-```text
-E-mail: demo@painelgestao.dev
-Senha: Demo2026!
-```
+- dificuldade na organização das informações;
+- perda de visibilidade sobre o andamento dos processos;
+- retrabalho;
+- maior risco de falhas no acompanhamento.
 
-Os dados criados pelo comando de seed são inteiramente fictícios — inclusive a compra de exemplo da Caixinha — e podem ser apagados junto com o banco de demonstração.
+---
 
-## Segurança da demonstração
+## ✅ Solução
 
-Com `DEMO_MODE=true`, o sistema bloqueia e-mails, WhatsApp e a rotina automática de lembretes, mesmo se uma chave for incluída por engano. Para uma instalação real, cada empresa deve usar banco, domínio, variáveis de ambiente e chaves de API próprios.
+A proposta do sistema é reunir essas informações em um **painel centralizado**, oferecendo uma visão mais clara e organizada do fluxo operacional.
 
-## Aviso de uso
+Com isso, o projeto busca:
 
-Este repositório demonstra competências técnicas e arquitetura de software. Não inclui dados, identidade visual ou integrações da operação original.
+- melhorar a visualização de dados;
+- facilitar o acompanhamento de renovações;
+- centralizar clientes e processos;
+- apoiar o controle interno com mais praticidade.
+
+---
+
+## ✨ Funcionalidades
+
+- Cadastro e gerenciamento de clientes  
+- Acompanhamento de renovações  
+- Controle de status  
+- Organização de processos internos  
+- Dashboard com informações resumidas  
+- Autenticação de usuários  
+- Integrações via API  
+- Integração com WhatsApp/Meta  
+
+---
+
+## 🛠️ Tecnologias utilizadas
+
+### Front-end
+- Next.js
+- React
+- TypeScript
+
+### Back-end / dados
+- PostgreSQL
+- Prisma ORM
+- Auth.js
+
+### Integrações e recursos
+- APIs REST
+- WhatsApp / Meta
+
+---
+
+## 🖼️ Screenshots
+
+> Adicione aqui imagens do sistema com **dados fictícios**.
+
+### Exemplo:
+```md
+<p align="center">
+  <img src="./assets/dashboard.png" alt="Dashboard do Painel de Renovações" width="800" />
+</p>
