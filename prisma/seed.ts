@@ -45,6 +45,30 @@ async function main() {
   const cnpjA3 = await ensurePriceRule({ productType: "E_CNPJ", certificateType: "A3", a3Model: "TOKEN", amount: 434.69 });
   const today = new Date();
 
+  const cashbox = await prisma.cashbox.upsert({
+    where: { id: "default" },
+    update: {},
+    create: { id: "default", openingBalance: 500 },
+  });
+  // The migration creates an empty singleton with R$ 0,00. Give only that
+  // untouched demo record its fictional initial amount; never reset changes
+  // that someone made while exploring the prototype.
+  const demoCashbox = Number(cashbox.openingBalance) === 0 && cashbox.version === 0
+    ? await prisma.cashbox.update({ where: { id: cashbox.id }, data: { openingBalance: 500 } })
+    : cashbox;
+  await prisma.cashboxExpense.upsert({
+    where: { requestId: "00000000-0000-4000-8000-000000000001" },
+    update: {},
+    create: {
+      cashboxId: demoCashbox.id,
+      requestId: "00000000-0000-4000-8000-000000000001",
+      amount: 35.9,
+      description: "Material de escritório (demonstração)",
+      establishment: "Papelaria Exemplo",
+      purchaseDate: addDays(today, -2),
+    },
+  });
+
   await prisma.client.upsert({
     where: { orderNumber: "DEMO-0001" },
     update: {},

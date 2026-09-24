@@ -443,3 +443,27 @@ model CertisignPartnerMapping {
   createdBy User? @relation("CertisignPartnerMappingCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
   @@index([partnerId])
 }
+
+model Cashbox {
+  id String @id @default("default")
+  openingBalance Decimal @default(0) @db.Decimal(14, 2)
+  version Int @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  expenses CashboxExpense[]
+}
+
+model CashboxExpense {
+  id String @id @default(cuid())
+  cashboxId String @default("default")
+  requestId String @unique
+  amount Decimal @db.Decimal(12, 2)
+  description String @db.VarChar(200)
+  establishment String @db.VarChar(200)
+  purchaseDate DateTime @db.Date
+  version Int @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  cashbox Cashbox @relation(fields: [cashboxId], references: [id], onDelete: Restrict)
+  @@index([cashboxId, purchaseDate, createdAt])
+}

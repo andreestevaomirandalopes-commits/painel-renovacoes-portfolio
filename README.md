@@ -12,6 +12,7 @@ Projeto demonstrativo de um painel para gestão de certificados digitais, renova
 - Importação de planilhas de clientes, parceiros, conciliação e datas de emissão;
 - Parceiros, códigos REV e cálculo de comissões;
 - Dashboard e visão financeira;
+- Caixinha para registrar despesas em dinheiro, com saldo e histórico;
 - Alertas de CNPJ com importação manual;
 - Controle de acessos para Proprietário, Administrador e Operador;
 - Perfil e personalização visual.
@@ -41,7 +42,7 @@ E-mail: demo@painelgestao.dev
 Senha: Demo2026!
 ```
 
-Os dados criados pelo comando de seed são inteiramente fictícios e podem ser apagados junto com o banco de demonstração.
+Os dados criados pelo comando de seed são inteiramente fictícios — inclusive a compra de exemplo da Caixinha — e podem ser apagados junto com o banco de demonstração.
 
 ## Segurança da demonstração
 
