@@ -45,6 +45,24 @@ async function main() {
   const cnpjA3 = await ensurePriceRule({ productType: "E_CNPJ", certificateType: "A3", a3Model: "TOKEN", amount: 434.69 });
   const today = new Date();
 
+  const agendaDate = addDays(today, 1);
+  agendaDate.setHours(0, 0, 0, 0);
+  await prisma.agendaEvent.upsert({
+    where: { id: "agenda-demo-1" },
+    update: {},
+    create: {
+      id: "agenda-demo-1",
+      date: agendaDate,
+      time: "10:00",
+      title: "Retorno para cliente (demonstração)",
+      notes: "Compromisso fictício incluído apenas para apresentar a agenda.",
+      responsibleId: user.id,
+      createdById: user.id,
+      reminderEnabled: true,
+      status: "AGENDADO",
+    },
+  });
+
   const cashbox = await prisma.cashbox.upsert({
     where: { id: "default" },
     update: {},

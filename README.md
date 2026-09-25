@@ -54,6 +54,7 @@ Com isso, o projeto busca:
 - Controle de status  
 - Organização de processos internos  
 - Dashboard com informações resumidas  
+- Agenda flutuante para compromissos e lembretes
 - Autenticação de usuários  
 - Integrações via API  
 - Integração com WhatsApp/Meta  

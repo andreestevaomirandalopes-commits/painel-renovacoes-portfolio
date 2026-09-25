@@ -99,6 +99,11 @@ enum EmissionDateImportItemStatus {
   CONFLITO
   ATUALIZADO
 }
+enum AgendaStatus {
+  AGENDADO
+  CONCLUIDO
+  CANCELADO
+}
 model User {
   id String @id @default(cuid())
   name String
@@ -117,6 +122,8 @@ model User {
   certisignPartnerMappings CertisignPartnerMapping[] @relation("CertisignPartnerMappingCreatedBy")
   commissionAppliedReconciliationItems ReconciliationItem[] @relation("ReconciliationCommissionAppliedBy")
   emissionDateImportRuns EmissionDateImportRun[] @relation("EmissionDateImportRunCreatedBy")
+  agendaAppointments AgendaEvent[] @relation("AgendaResponsible")
+  agendaCreatedEvents AgendaEvent[] @relation("AgendaCreatedBy")
 }
 model Client {
   id String @id @default(cuid())
@@ -466,4 +473,23 @@ model CashboxExpense {
   updatedAt DateTime @updatedAt
   cashbox Cashbox @relation(fields: [cashboxId], references: [id], onDelete: Restrict)
   @@index([cashboxId, purchaseDate, createdAt])
+}
+
+model AgendaEvent {
+  id String @id @default(cuid())
+  date DateTime @db.Date
+  time String @db.VarChar(5)
+  title String @db.VarChar(160)
+  notes String? @db.VarChar(1000)
+  responsibleId String
+  createdById String?
+  reminderEnabled Boolean @default(false)
+  status AgendaStatus @default(AGENDADO)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  responsible User @relation("AgendaResponsible", fields: [responsibleId], references: [id], onDelete: Restrict)
+  createdBy User? @relation("AgendaCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  @@index([date, time])
+  @@index([responsibleId, date, time])
+  @@index([status, date])
 }
