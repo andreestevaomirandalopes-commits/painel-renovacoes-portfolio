@@ -55,6 +55,8 @@ Com isso, o projeto busca:
 - Organização de processos internos  
 - Dashboard com informações resumidas  
 - Agenda flutuante para compromissos e lembretes
+- Controle de conclusão e total mensal de compromissos
+- Histórico de pedidos por data e hora de inserção
 - Autenticação de usuários  
 - Integrações via API  
 - Integração com WhatsApp/Meta  

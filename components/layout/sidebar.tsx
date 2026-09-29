@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { Banknote, BellRing, CalendarClock, ClipboardCheck, Handshake, History, LayoutDashboard, Menu, Settings, Upload, Users, Wallet } from "lucide-react";
+import { Banknote, BellRing, CalendarClock, ClipboardCheck, ClipboardList, Handshake, History, LayoutDashboard, Menu, Settings, Upload, Users, Wallet } from "lucide-react";
 
-const items=[ ["/","Dashboard",LayoutDashboard], ["/clientes","Clientes",Users], ["/parceiros","Parceiros",Handshake], ["/renovacoes","Renovações",CalendarClock], ["/alertas-cnpj","Alertas de CNPJ",BellRing], ["/conciliacao","Conciliação",ClipboardCheck], ["/importar","Importar planilha",Upload], ["/historico","Histórico",History], ["/financeiro","Financeiro",Wallet], ["/caixinha","Caixinha",Banknote], ["/configuracoes","Configurações",Settings], ["/configuracoes/perfil","Meu perfil",Settings] ] as const;
+const items=[ ["/","Dashboard",LayoutDashboard], ["/clientes","Clientes",Users], ["/parceiros","Parceiros",Handshake], ["/renovacoes","Renovações",CalendarClock], ["/alertas-cnpj","Alertas de CNPJ",BellRing], ["/conciliacao","Conciliação",ClipboardCheck], ["/importar","Importar planilha",Upload], ["/historico","Histórico",History], ["/historico-pedidos","Histórico de Pedidos",ClipboardList], ["/financeiro","Financeiro",Wallet], ["/caixinha","Caixinha",Banknote], ["/configuracoes","Configurações",Settings], ["/configuracoes/perfil","Meu perfil",Settings] ] as const;
 
 export function Sidebar({brandName="Painel de Renovações",sidebarColor="#0f172a",logoUrl,role,newAlertCount=0}: {brandName?:string;sidebarColor?:string;logoUrl?:string|null;role?:"SUPER_ADMIN"|"ADMIN"|"OPERADOR";newAlertCount?:number}) {
   const pathname=usePathname(); const [compact,setCompact]=useState(false);

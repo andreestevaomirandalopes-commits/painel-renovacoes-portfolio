@@ -175,6 +175,7 @@ model Client {
   @@index([cpf, expirationDate])
   @@index([partnerId])
   @@index([priceRuleId])
+  @@index([createdAt])
 }
 model ContactLog {
   id String @id @default(cuid())

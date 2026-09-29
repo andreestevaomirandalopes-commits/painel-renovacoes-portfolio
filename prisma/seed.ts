@@ -63,6 +63,24 @@ async function main() {
     },
   });
 
+  const completedAgendaDate = addDays(today, -1);
+  completedAgendaDate.setHours(0, 0, 0, 0);
+  await prisma.agendaEvent.upsert({
+    where: { id: "agenda-demo-2" },
+    update: {},
+    create: {
+      id: "agenda-demo-2",
+      date: completedAgendaDate,
+      time: "14:15",
+      title: "Checklist operacional (demonstração)",
+      notes: "Compromisso fictício concluído para demonstrar o contador mensal.",
+      responsibleId: user.id,
+      createdById: user.id,
+      reminderEnabled: false,
+      status: "CONCLUIDO",
+    },
+  });
+
   const cashbox = await prisma.cashbox.upsert({
     where: { id: "default" },
     update: {},

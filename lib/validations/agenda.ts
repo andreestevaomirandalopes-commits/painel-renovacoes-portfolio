@@ -26,5 +26,10 @@ export const agendaRangeSchema = z.object({ start: calendarDate, end: calendarDa
   return (Date.parse(`${end}T00:00:00.000Z`) - Date.parse(`${start}T00:00:00.000Z`)) / 86_400_000 <= 93;
 }, "Selecione um período de até 94 dias.");
 
+export const agendaMonthSchema = z.string().trim().regex(/^\d{4}-\d{2}$/, "Selecione um mês válido.").refine(value => {
+  const [year, month] = value.split("-").map(Number);
+  return Number.isInteger(year) && Number.isInteger(month) && year >= 1900 && year <= 9999 && month >= 1 && month <= 12;
+}, "Selecione um mês válido.");
+
 export type CreateAgendaEventInput = z.infer<typeof createAgendaEventSchema>;
 export type UpdateAgendaEventInput = z.infer<typeof updateAgendaEventSchema>;

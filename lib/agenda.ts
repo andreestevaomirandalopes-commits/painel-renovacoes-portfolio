@@ -16,6 +16,11 @@ const eventInclude = { responsible: { select: { id: true, name: true, email: tru
 type EventWithResponsible = Prisma.AgendaEventGetPayload<{ include: typeof eventInclude }>;
 const asDate = (value: string) => new Date(`${value}T00:00:00.000Z`);
 
+function monthRange(value: string) {
+  const [year, month] = value.split("-").map(Number);
+  return { start: new Date(Date.UTC(year, month - 1, 1)), end: new Date(Date.UTC(year, month, 1)) };
+}
+
 function serialize(event: EventWithResponsible): AgendaEventDto {
   return { id: event.id, date: event.date.toISOString().slice(0, 10), time: event.time, title: event.title, notes: event.notes, responsible: event.responsible, reminderEnabled: event.reminderEnabled, status: event.status, createdAt: event.createdAt.toISOString(), updatedAt: event.updatedAt.toISOString() };
 }
@@ -36,6 +41,11 @@ async function recordAgendaAudit(tx: Prisma.TransactionClient, actorUserId: stri
 export async function listAgendaEvents(start: string, end: string) {
   const events = await prisma.agendaEvent.findMany({ where: { date: { gte: asDate(start), lte: asDate(end) } }, include: eventInclude, orderBy: [{ date: "asc" }, { time: "asc" }, { createdAt: "asc" }] });
   return events.map(serialize);
+}
+
+export async function countCompletedAgendaEvents(month: string) {
+  const range = monthRange(month);
+  return prisma.agendaEvent.count({ where: { status: "CONCLUIDO", date: { gte: range.start, lt: range.end } } });
 }
 
 export async function createAgendaEvent(input: CreateAgendaEventInput, actorUserId: string) {
