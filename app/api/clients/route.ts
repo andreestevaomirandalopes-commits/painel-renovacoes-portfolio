@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { clientSchema } from "@/lib/validations/client";
 import { calculateCertificateStatus } from "@/lib/status";
@@ -72,6 +73,9 @@ export async function POST(req: Request) {
     });
     return ok(client, 201);
   } catch (error) {
-    return fail("CLIENT_CREATE_FAILED", error instanceof Error ? error.message : "Número do pedido já cadastrado", 409);
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      return fail("ORDER_NUMBER_ALREADY_EXISTS", "Já existe um pedido cadastrado com este número.", 409);
+    }
+    return fail("CLIENT_CREATE_FAILED", "Não foi possível cadastrar o pedido. Tente novamente.", 500);
   }
 }
