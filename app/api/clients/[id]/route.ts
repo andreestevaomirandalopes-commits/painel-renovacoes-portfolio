@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { clientSchema } from "@/lib/validations/client";
 import { calendarDate, expirationFromEmissionDate } from "@/lib/certificates";
@@ -51,7 +52,10 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       details: { orderNumber: client.orderNumber, issuedAt: client.issuedAt?.toISOString() || null, orderType: client.orderType },
     });
     return ok(client);
-  } catch {
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      return fail("ORDER_NUMBER_ALREADY_EXISTS", "Já existe um pedido cadastrado com este número.", 409);
+    }
     return fail("NOT_FOUND", "Cliente não encontrado", 404);
   }
 }
