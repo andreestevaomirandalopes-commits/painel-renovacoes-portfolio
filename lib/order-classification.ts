@@ -25,25 +25,25 @@ export async function classifyOrder(input: {
   const documents = [...new Set([normalizeDocument(input.cpf), normalizeDocument(input.cnpj)].filter(Boolean))];
   if (!documents.length) return OrderType.VENDA_NOVA;
 
-  const documentPredicates = documents.map((document) => Prisma.sql\`
+  const documentPredicates = documents.map((document) => Prisma.sql`
     (
-      regexp_replace("cpf", '[^0-9]', '', 'g') = \${document}
-      OR regexp_replace(COALESCE("cnpj", ''), '[^0-9]', '', 'g') = \${document}
+      regexp_replace("cpf", '[^0-9]', '', 'g') = ${document}
+      OR regexp_replace(COALESCE("cnpj", ''), '[^0-9]', '', 'g') = ${document}
     )
-  \`);
+  `);
 
   const exclusion = input.excludeClientId
-    ? Prisma.sql\`AND "id" <> \${input.excludeClientId}\`
+    ? Prisma.sql`AND "id" <> ${input.excludeClientId}`
     : Prisma.empty;
 
-  const previousOrders = await prisma.$queryRaw<Array<{ id: string; expirationDate: Date }>>(Prisma.sql\`
+  const previousOrders = await prisma.$queryRaw<Array<{ id: string; expirationDate: Date }>>(Prisma.sql`
     SELECT "id", "expirationDate"
     FROM "Client"
-    WHERE (\${Prisma.join(documentPredicates, Prisma.sql\` OR \`)})
-    \${exclusion}
+    WHERE (${Prisma.join(documentPredicates, Prisma.sql` OR `)})
+    ${exclusion}
     ORDER BY "expirationDate" DESC, "id" DESC
     LIMIT 1
-  \`);
+  `);
 
   const previousOrder = previousOrders[0];
   return classifyOrderType(input.purchaseDate, previousOrder?.expirationDate);
