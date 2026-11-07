@@ -9,6 +9,13 @@ function calendarDay(value: Date) {
   return Date.UTC(value.getUTCFullYear(), value.getUTCMonth(), value.getUTCDate());
 }
 
+export function classifyOrderType(purchaseDate: Date, previousExpirationDate?: Date | null) {
+  if (!previousExpirationDate) return OrderType.VENDA_NOVA;
+  return calendarDay(purchaseDate) <= calendarDay(previousExpirationDate)
+    ? OrderType.RENOVADO
+    : OrderType.VENDA_NOVA;
+}
+
 export async function classifyOrder(input: {
   cpf: string;
   cnpj?: string | null;
@@ -39,9 +46,5 @@ export async function classifyOrder(input: {
   \`);
 
   const previousOrder = previousOrders[0];
-  if (!previousOrder) return OrderType.VENDA_NOVA;
-
-  return calendarDay(input.purchaseDate) <= calendarDay(previousOrder.expirationDate)
-    ? OrderType.RENOVADO
-    : OrderType.VENDA_NOVA;
+  return classifyOrderType(input.purchaseDate, previousOrder?.expirationDate);
 }
