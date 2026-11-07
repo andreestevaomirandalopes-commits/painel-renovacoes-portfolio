@@ -7,6 +7,7 @@ import { assertFinancialMonthOpen } from "@/lib/financial-period";
 import { audit } from "@/lib/audit";
 import { auth } from "@/auth";
 import { fail, ok } from "@/lib/api";
+import { classifyOrder, normalizeDocument } from "@/lib/order-classification";
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -37,16 +38,22 @@ export async function POST(req: Request) {
     const purchaseDate = value.purchaseDate || new Date();
     const issuedAt = value.issuedAt ? calendarDate(value.issuedAt) : null;
     const expirationDate = issuedAt ? expirationFromEmissionDate(issuedAt, value.certificateType) : value.expirationDate;
+    const cpf = normalizeDocument(value.cpf);
+    const cnpj = normalizeDocument(value.cnpj) || null;
+    const orderType = await classifyOrder({ cpf, cnpj, purchaseDate });
     await assertFinancialMonthOpen(purchaseDate);
 
     const price = await resolveSalePrice(value.productType, value.certificateType, value.a3Model, purchaseDate);
     const client = await prisma.client.create({
       data: {
         ...value,
+        cpf,
+        cnpj,
         issuedAt,
         expirationDate,
         purchaseDate,
-        cnpj: value.cnpj || null,
+        orderType,
+        isRenewal: orderType === "RENOVADO",
         partnerId: value.partnerId || null,
         a3Model: value.certificateType === "A1" ? null : value.a3Model!,
         estimatedValue: value.estimatedValue ?? price?.amount,
@@ -61,7 +68,7 @@ export async function POST(req: Request) {
       action: "CLIENT_CREATED",
       entity: "Client",
       entityId: client.id,
-      details: { orderNumber: client.orderNumber, value: String(client.estimatedValue || ""), issuedAt: client.issuedAt?.toISOString() || null, status: "Adição" },
+      details: { orderNumber: client.orderNumber, value: String(client.estimatedValue || ""), issuedAt: client.issuedAt?.toISOString() || null, orderType: client.orderType, status: "Adição" },
     });
     return ok(client, 201);
   } catch (error) {
