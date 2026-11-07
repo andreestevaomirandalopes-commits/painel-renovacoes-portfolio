@@ -39,7 +39,7 @@ export async function classifyOrder(input: {
   const previousOrders = await prisma.$queryRaw<Array<{ id: string; expirationDate: Date }>>(Prisma.sql`
     SELECT "id", "expirationDate"
     FROM "Client"
-    WHERE (${Prisma.join(documentPredicates, Prisma.sql` OR `)})
+    WHERE (${Prisma.join(documentPredicates, " OR ")})
     ${exclusion}
     ORDER BY "expirationDate" DESC, "id" DESC
     LIMIT 1
