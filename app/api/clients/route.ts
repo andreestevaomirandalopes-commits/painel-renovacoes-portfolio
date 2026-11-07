@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { clientSchema } from "@/lib/validations/client";
 import { calculateCertificateStatus } from "@/lib/status";
@@ -7,6 +8,7 @@ import { assertFinancialMonthOpen } from "@/lib/financial-period";
 import { audit } from "@/lib/audit";
 import { auth } from "@/auth";
 import { fail, ok } from "@/lib/api";
+import { classifyOrder, normalizeDocument } from "@/lib/order-classification";
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -37,16 +39,22 @@ export async function POST(req: Request) {
     const purchaseDate = value.purchaseDate || new Date();
     const issuedAt = value.issuedAt ? calendarDate(value.issuedAt) : null;
     const expirationDate = issuedAt ? expirationFromEmissionDate(issuedAt, value.certificateType) : value.expirationDate;
+    const cpf = normalizeDocument(value.cpf);
+    const cnpj = normalizeDocument(value.cnpj) || null;
+    const orderType = await classifyOrder({ cpf, cnpj, purchaseDate });
     await assertFinancialMonthOpen(purchaseDate);
 
     const price = await resolveSalePrice(value.productType, value.certificateType, value.a3Model, purchaseDate);
     const client = await prisma.client.create({
       data: {
         ...value,
+        cpf,
+        cnpj,
         issuedAt,
         expirationDate,
         purchaseDate,
-        cnpj: value.cnpj || null,
+        orderType,
+        isRenewal: orderType === "RENOVADO",
         partnerId: value.partnerId || null,
         a3Model: value.certificateType === "A1" ? null : value.a3Model!,
         estimatedValue: value.estimatedValue ?? price?.amount,
@@ -61,10 +69,13 @@ export async function POST(req: Request) {
       action: "CLIENT_CREATED",
       entity: "Client",
       entityId: client.id,
-      details: { orderNumber: client.orderNumber, value: String(client.estimatedValue || ""), issuedAt: client.issuedAt?.toISOString() || null, status: "Adição" },
+      details: { orderNumber: client.orderNumber, value: String(client.estimatedValue || ""), issuedAt: client.issuedAt?.toISOString() || null, orderType: client.orderType, status: "Adição" },
     });
     return ok(client, 201);
   } catch (error) {
-    return fail("CLIENT_CREATE_FAILED", error instanceof Error ? error.message : "Número do pedido já cadastrado", 409);
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      return fail("ORDER_NUMBER_ALREADY_EXISTS", "Já existe um pedido cadastrado com este número.", 409);
+    }
+    return fail("CLIENT_CREATE_FAILED", "Não foi possível cadastrar o pedido. Tente novamente.", 500);
   }
 }

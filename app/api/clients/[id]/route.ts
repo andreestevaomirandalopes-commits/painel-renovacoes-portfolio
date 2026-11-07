@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { clientSchema } from "@/lib/validations/client";
 import { calendarDate, expirationFromEmissionDate } from "@/lib/certificates";
@@ -5,6 +6,7 @@ import { calculateCertificateStatus } from "@/lib/status";
 import { fail, ok } from "@/lib/api";
 import { requireSuperAdmin } from "@/lib/permissions";
 import { audit } from "@/lib/audit";
+import { classifyOrder, normalizeDocument } from "@/lib/order-classification";
 
 export async function GET(_: Request, { params }: { params: Promise<{ id: string }> }) {
   const client = await prisma.client.findUnique({ where: { id: (await params).id } });
@@ -21,16 +23,23 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   const value = parsed.data;
   const issuedAt = value.issuedAt ? calendarDate(value.issuedAt) : null;
   const expirationDate = issuedAt ? expirationFromEmissionDate(issuedAt, value.certificateType) : value.expirationDate;
+  const cpf = normalizeDocument(value.cpf);
+  const cnpj = normalizeDocument(value.cnpj) || null;
 
   try {
     const id = (await params).id;
+    const purchaseDate = value.purchaseDate || new Date();
+    const orderType = await classifyOrder({ cpf, cnpj, purchaseDate, excludeClientId: id });
     const client = await prisma.client.update({
       where: { id },
       data: {
         ...value,
+        cpf,
+        cnpj,
         issuedAt,
         expirationDate,
-        cnpj: value.cnpj || null,
+        orderType,
+        isRenewal: orderType === "RENOVADO",
         a3Model: value.certificateType === "A1" ? null : value.a3Model!,
         status: calculateCertificateStatus(expirationDate),
       },
@@ -40,10 +49,13 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       action: "CLIENT_UPDATED",
       entity: "Client",
       entityId: id,
-      details: { orderNumber: client.orderNumber, issuedAt: client.issuedAt?.toISOString() || null },
+      details: { orderNumber: client.orderNumber, issuedAt: client.issuedAt?.toISOString() || null, orderType: client.orderType },
     });
     return ok(client);
-  } catch {
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      return fail("ORDER_NUMBER_ALREADY_EXISTS", "Já existe um pedido cadastrado com este número.", 409);
+    }
     return fail("NOT_FOUND", "Cliente não encontrado", 404);
   }
 }
